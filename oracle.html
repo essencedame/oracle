@@ -1,0 +1,761 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Oracle — Numérolab</title>
+<meta name="theme-color" content="#fcfcfb">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<style>
+  html, body { margin: 0; padding: 0; background: #fcfcfb; }
+  #root { min-height: 100vh; }
+</style>
+<script src="https://unpkg.com/react@18/umd/react.production.min.js" crossorigin></script>
+<script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js" crossorigin></script>
+<script src="https://unpkg.com/@babel/standalone@7.24.7/babel.min.js" crossorigin></script>
+</head>
+<body>
+<div id="root"></div>
+
+<script type="text/babel" data-type="module">
+const { useState, useEffect } = React;
+
+
+
+/* ============================================================
+   ORACLE — Numérolab
+   1 → 9 + nombres maîtres 11, 22, 33
+   Le jeu peut contenir 100 cartes : on en étale une partie,
+   comme dans un vrai tirage. Ajouter des objets avec le même "n"
+   pour créer plusieurs facettes d'un même nombre.
+   ============================================================ */
+
+const FAN_MAX = 21; // nombre de cartes étalées à l'écran (le jeu peut en contenir 100)
+
+/* ---------- Logo Numérolab (fleur de vie) ---------- */
+const Logo = ({ size = 40, stroke = 0.5, opacity = 1 }) => (
+  <svg
+    width={size}
+    height={size}
+    viewBox="-25 -25 50 50"
+    fill="none"
+    aria-hidden="true"
+    style={{ opacity }}
+  >
+    <g stroke="#3f6b5f" strokeWidth={stroke}>
+      <circle cx="0" cy="0" r="22" />
+      <circle cx="0" cy="0" r="11" />
+      {[90, 150, 210, 270, 330, 30].map((a) => (
+        <circle
+          key={a}
+          cx={11 * Math.cos((a * Math.PI) / 180)}
+          cy={-11 * Math.sin((a * Math.PI) / 180)}
+          r="11"
+        />
+      ))}
+    </g>
+    {[
+      [-22, "#6a2c91"],
+      [-14.7, "#1e4d8c"],
+      [-7.3, "#4a9dd4"],
+      [0, "#4f9a45"],
+      [7.3, "#f4d03f"],
+      [14.7, "#e0921f"],
+      [22, "#c0392b"],
+    ].map(([y, c]) => (
+      <circle key={y} cx="0" cy={y} r="1.7" fill={c} />
+    ))}
+  </svg>
+);
+
+/* ---------- Illustrations ---------- */
+const Ill = {
+  1: (
+    <g>
+      <path d="M32 54V22" />
+      <path d="M32 22l-7 8M32 22l7 8" />
+      <circle cx="32" cy="14" r="3" />
+    </g>
+  ),
+  2: (
+    <g>
+      <circle cx="26" cy="32" r="13" />
+      <circle cx="38" cy="32" r="13" />
+    </g>
+  ),
+  3: (
+    <g>
+      <path d="M14 40c6-9 12-9 18 0s12 9 18 0" />
+      <path d="M14 30c6-9 12-9 18 0s12 9 18 0" />
+      <circle cx="32" cy="52" r="2.5" />
+    </g>
+  ),
+  4: (
+    <g>
+      <rect x="16" y="34" width="14" height="12" rx="2" />
+      <rect x="34" y="34" width="14" height="12" rx="2" />
+      <rect x="25" y="20" width="14" height="12" rx="2" />
+    </g>
+  ),
+  5: (
+    <g>
+      <path d="M10 26c8-8 14 8 22 0s14 8 22 0" />
+      <path d="M10 38c8-8 14 8 22 0s14 8 22 0" />
+    </g>
+  ),
+  6: (
+    <g>
+      <circle cx="32" cy="32" r="7" />
+      <path d="M32 25c0-8 12-8 12 0s-12 8-12 0" />
+      <path d="M32 39c0 8-12 8-12 0s12-8 12 0" />
+      <path d="M39 32c8 0 8 12 0 12s-8-12 0-12" />
+      <path d="M25 32c-8 0-8-12 0-12s8 12 0 12" />
+    </g>
+  ),
+  7: (
+    <g>
+      <path d="M12 46l12-18 8 11 6-8 14 15z" />
+      <circle cx="44" cy="19" r="5" />
+    </g>
+  ),
+  8: (
+    <g>
+      <circle cx="32" cy="22" r="9" />
+      <circle cx="32" cy="42" r="11" />
+    </g>
+  ),
+  9: (
+    <g>
+      <path d="M32 50c-9 0-16-7-16-16S23 18 32 18s14 6 14 13-5 11-10 11-8-3-8-7 2-6 5-6" />
+    </g>
+  ),
+  11: (
+    <g>
+      <path d="M24 50V18M40 50V18" />
+      <path d="M32 44v-6M32 32v-6M32 20v-4" />
+    </g>
+  ),
+  22: (
+    <g>
+      <path d="M12 48c0-14 9-24 20-24s20 10 20 24" />
+      <path d="M12 48h40" />
+      <path d="M22 48V38M32 48V34M42 48V38" />
+    </g>
+  ),
+  33: (
+    <g>
+      <path d="M32 48s-14-8-14-17a7 7 0 0114-4 7 7 0 0114 4c0 9-14 17-14 17z" />
+      <path d="M18 52h28" />
+    </g>
+  ),
+};
+
+const OR = { pastel: "#e6c76a", deep: "#9a7b1f", tint: "#faf5e6" };
+
+const CARDS = [
+  {
+    n: "1",
+    facette: "Audace",
+    pastel: "#f69497",
+    deep: "#c25f62",
+    tint: "#fdf0f0",
+    message:
+      "Le premier pas n'attend pas la perfection. Quelque chose en toi est prêt à commencer — bien avant que tout soit prêt.",
+    question: "Où est-ce que je pourrais avancer de 1 % aujourd'hui ?",
+    action: "Choisis une action réalisable en moins de cinq minutes, et fais-la maintenant.",
+    equilibre:
+      "L'audace ne consiste pas à aller vite. Elle invite simplement à ne plus laisser la peur décider.",
+    mantra: "Je fais confiance au premier pas.",
+    numero:
+      "Le 1 évoque l'initiative, l'élan, la capacité d'ouvrir un chemin. Cette facette peut être une invitation à observer où cette énergie cherche à s'exprimer chez toi en ce moment.",
+  },
+  {
+    n: "2",
+    facette: "Écoute",
+    pastel: "#99c8f1",
+    deep: "#4d84b8",
+    tint: "#eff6fd",
+    message:
+      "Ce que tu ressens sous les mots est une information, pas une exagération. Aujourd'hui, la justesse passe par le lien.",
+    question: "Où est-ce que je dis oui alors que quelque chose en moi dit non ?",
+    action: "Exprime un vrai besoin à quelqu'un, simplement, sans le justifier.",
+    equilibre:
+      "L'écoute des autres ne vaut que si tu restes dans la pièce. Accueillir ne veut pas dire disparaître.",
+    mantra: "Ma sensibilité est une intelligence.",
+    numero:
+      "Le 2 parle de relation, de patience, de réceptivité. Il peut inviter à regarder la place que tu occupes dans tes liens actuels.",
+  },
+  {
+    n: "3",
+    facette: "Expression",
+    pastel: "#d6e4a1",
+    deep: "#7f9440",
+    tint: "#f7faec",
+    message:
+      "Ce que tu gardes à l'intérieur demande à sortir. Pas pour être parfait — juste pour exister hors de toi.",
+    question: "Qu'est-ce que j'ai envie de dire, et à qui ?",
+    action: "Crée une petite chose aujourd'hui : un texte, un vocal, un dessin. Sans le juger.",
+    equilibre:
+      "L'expression déborde vite. La joie gagne à choisir un lieu plutôt qu'à s'éparpiller partout.",
+    mantra: "Ce que j'exprime prend vie.",
+    numero:
+      "Le 3 évoque la créativité, la communication, la légèreté. Il peut signaler un besoin de circulation dans ce qui stagne.",
+  },
+  {
+    n: "4",
+    facette: "Structure",
+    pastel: "#f4db73",
+    deep: "#a98a24",
+    tint: "#fdf9e9",
+    message:
+      "Ce qui se construit lentement tient plus longtemps que ce qui brille vite. La régularité est en train de faire son travail.",
+    question: "Quelle structure me soutient — et laquelle m'enferme ?",
+    action: "Consacre dix minutes à clarifier un espace, un dossier, une liste.",
+    equilibre:
+      "Le cadre est un allié tant qu'il reste au service du vivant. Solide n'est pas rigide.",
+    mantra: "Je bâtis à mon rythme.",
+    numero:
+      "Le 4 parle de fondations, d'effort, de concret. Il peut inviter à regarder ce qui a besoin d'être posé pour de bon.",
+  },
+  {
+    n: "5",
+    facette: "Mouvement",
+    pastel: "#ffb282",
+    deep: "#c9713c",
+    tint: "#fff4ec",
+    message:
+      "Le vent tourne, et c'est une bonne nouvelle. Ce qui semblait figé recommence à bouger — même si tu ne vois pas encore où ça mène.",
+    question: "De quoi ai-je besoin de me libérer pour respirer plus grand ?",
+    action:
+      "Change une petite habitude aujourd'hui : un autre chemin, un autre horaire, un autre choix.",
+    equilibre:
+      "Le mouvement devient fuite quand il ne s'arrête jamais. Bouger, oui — sans se perdre.",
+    mantra: "Je m'autorise à changer d'avis.",
+    numero:
+      "Le 5 évoque la liberté, l'expérience, l'adaptation. Il peut souligner un besoin d'air dans ce qui est devenu trop étroit.",
+  },
+  {
+    n: "6",
+    facette: "Douceur",
+    pastel: "#ffafe0",
+    deep: "#c2609b",
+    tint: "#fff0fa",
+    message:
+      "Tu sais prendre soin. Rappelle-toi que tu fais partie des personnes dont tu prends soin.",
+    question: "Est-ce que je m'accorde ce que j'offre si facilement aux autres ?",
+    action:
+      "Offre-toi un moment de douceur, exactement comme tu le ferais pour quelqu'un que tu aimes.",
+    equilibre:
+      "Prendre soin devient un poids quand tu te sens responsable du bonheur de tout le monde. Aimer n'est pas porter.",
+    mantra: "Je fais partie de ceux dont je prends soin.",
+    numero:
+      "Le 6 parle d'amour, de beauté, de responsabilité. Il peut interroger l'équilibre entre ce que tu donnes et ce que tu reçois.",
+  },
+  {
+    n: "7",
+    facette: "Silence",
+    pastel: "#d9d9d9",
+    deep: "#7d7d7d",
+    tint: "#f6f6f6",
+    message:
+      "La réponse que tu cherches dehors est déjà là, un peu plus bas que le mental. Elle parle doucement.",
+    question: "Qu'est-ce que mon silence essaie de me dire ?",
+    action: "Dix minutes sans écran — marcher, respirer — puis noter ce qui est monté.",
+    equilibre:
+      "Le retrait nourrit, l'isolement épuise. La différence tient souvent à une seule conversation.",
+    mantra: "Je sais déjà, il me faut juste du calme pour l'entendre.",
+    numero:
+      "Le 7 évoque l'analyse, l'intériorité, la quête de sens. Il peut inviter à ralentir avant de décider.",
+  },
+  {
+    n: "8",
+    facette: "Puissance",
+    pastel: "#daa289",
+    deep: "#a1614a",
+    tint: "#faf1ec",
+    message:
+      "Tu es plus puissante que tu ne l'admets. L'abondance n'est pas une récompense à mériter : c'est une place à prendre.",
+    question: "Où est-ce que je joue plus petit que ce que je suis ?",
+    action: "Pose un acte concret : envoie ce message, fixe ce prix, demande ce que tu vaux.",
+    equilibre:
+      "La puissance se déforme quand elle devient contrôle. Diriger n'est pas tout tenir.",
+    mantra: "Je peux réussir sans me trahir.",
+    numero:
+      "Le 8 parle de matière, de justesse, de pouvoir. Il peut mettre en lumière ton rapport à la valeur et à l'argent.",
+  },
+  {
+    n: "9",
+    facette: "Achèvement",
+    pastel: "#ebc6f6",
+    deep: "#a05fb8",
+    tint: "#faf0fd",
+    message:
+      "Un cycle se termine. Il mérite ta gratitude plutôt que tes regrets — et l'espace qu'il libère est exactement celui dont la suite a besoin.",
+    question: "Qu'est-ce qui demande à être terminé pour laisser place ?",
+    action: "Termine ou libère une chose aujourd'hui : un dossier, un objet, un pardon.",
+    equilibre:
+      "Lâcher n'est pas renier. On peut aimer ce qui s'achève et le laisser partir quand même.",
+    mantra: "Ce qui se termine m'a menée jusqu'ici.",
+    numero:
+      "Le 9 évoque le bilan, la compassion, la transmission. Il peut signaler une fin déjà là, qui attend d'être reconnue.",
+  },
+  {
+    n: "11",
+    facette: "Intuition",
+    ...OR,
+    maitre: true,
+    message:
+      "Ce que tu ressens si fort n'est pas « trop ». C'est une antenne. Le message revient depuis un moment — tu l'as déjà reconnu.",
+    question: "Quelle intuition mon corps me répète depuis des semaines ?",
+    action: "Note tes intuitions du jour. Choisis-en une seule, et agis dessus.",
+    equilibre: "Capter beaucoup demande de savoir se protéger. L'antenne a besoin d'un sol.",
+    mantra: "Je crois ce que je ressens.",
+    numero:
+      "Nombre maître, le 11 amplifie le 2 : la réceptivité devient inspiration. Il demande à être ancré pour ne pas devenir tension.",
+  },
+  {
+    n: "22",
+    facette: "Bâtir",
+    ...OR,
+    maitre: true,
+    message:
+      "Ton projet n'est pas trop grand : il est à ta mesure. Ce qui semble immense vu d'en bas se construit comme tout le reste — une pierre, puis une autre.",
+    question: "Quel grand rêve mérite enfin un premier plan concret ?",
+    action: "Découpe-le en trois étapes. Mets la première dans ton agenda cette semaine.",
+    equilibre: "La vision sans étape écrase. L'ampleur devient légère dès qu'elle a une date.",
+    mantra: "Je transforme ma vision en étapes.",
+    numero:
+      "Nombre maître, le 22 amplifie le 4 : la structure se met au service d'une vision large. Il demande du réel, pas de la pression.",
+  },
+  {
+    n: "33",
+    facette: "Transmission",
+    ...OR,
+    maitre: true,
+    message:
+      "Ta présence fait plus que tu ne le penses. Et l'amour véritable inclut celle qui le donne : on ne transmet durablement que depuis un cœur nourri.",
+    question: "Comment puis-je aider sans m'oublier ?",
+    action: "Un geste d'attention pour quelqu'un — et un geste de même taille pour toi.",
+    equilibre:
+      "Se donner sans limite ne rend service à personne, surtout pas à ceux qu'on aime.",
+    mantra: "Je donne depuis le plein, pas depuis le vide.",
+    numero:
+      "Nombre maître, le 33 amplifie le 6 : l'amour devient transmission. Il invite à servir sans se sacrifier.",
+  },
+];
+
+const shuffle = (a) => {
+  const r = [...a];
+  for (let i = r.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [r[i], r[j]] = [r[j], r[i]];
+  }
+  return r;
+};
+
+const CSS = `
+@import url('https://fonts.googleapis.com/css2?family=DM+Sans:opsz,wght@9..40,200;9..40,300;9..40,400;9..40,500&family=Newsreader:ital,opsz,wght@0,6..72,300;0,6..72,400;1,6..72,300&display=swap');
+
+.or-root {
+  --ink: #1f2124;
+  --ink-2: #6b6f76;
+  --ink-3: #9aa0a8;
+  --paper: #ffffff;
+  --line: rgba(31, 33, 36, 0.08);
+  --pastel: #d9d9d9;
+  --deep: #6b6f76;
+  --tint: #f7f7f5;
+
+  --cw: 104px;   /* largeur carte dos */
+  --ch: 156px;   /* hauteur carte dos */
+  --radius: 900px; /* rayon de l'éventail : plus il est grand, plus l'étalement est large */
+
+  --ui: 'DM Sans', -apple-system, system-ui, sans-serif;
+  --read: 'Newsreader', Georgia, serif;
+
+  min-height: 100vh;
+  font-family: var(--ui);
+  color: var(--ink);
+  background: linear-gradient(180deg, var(--tint) 0%, #fcfcfb 60%);
+  transition: background 1.1s ease;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 48px 0 64px;
+  overflow-x: hidden;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* ---------- accueil ---------- */
+.or-start { display: flex; flex-direction: column; align-items: center; gap: 46px; }
+.or-logo-idle { animation: or-breathe 5.5s ease-in-out infinite; }
+@keyframes or-breathe {
+  0%, 100% { transform: scale(1); opacity: 0.8; }
+  50% { transform: scale(1.05); opacity: 1; }
+}
+.or-btn {
+  font-family: var(--ui);
+  font-size: 14px;
+  color: var(--paper);
+  background: var(--ink);
+  border: 0;
+  border-radius: 999px;
+  padding: 16px 34px;
+  cursor: pointer;
+  transition: transform 0.25s ease, opacity 0.25s ease;
+}
+.or-btn:hover { transform: translateY(-2px); opacity: 0.92; }
+.or-btn:focus-visible { outline: 2px solid var(--ink); outline-offset: 4px; }
+
+/* ---------- étalement ---------- */
+.or-spread-wrap { display: flex; flex-direction: column; align-items: center; gap: 26px; width: 100%; }
+.or-spread {
+  position: relative;
+  width: 100%;
+  height: calc(var(--ch) + 140px);
+}
+.or-back {
+  position: absolute;
+  left: 50%;
+  bottom: 20px;
+  width: var(--cw);
+  height: var(--ch);
+  margin-left: calc(var(--cw) / -2);
+  transform-origin: 50% var(--radius);
+  border: 0;
+  padding: 0;
+  border-radius: 12px;
+  background: var(--paper);
+  box-shadow: 0 1px 0 rgba(31, 33, 36, 0.06), 0 8px 22px rgba(31, 33, 36, 0.11);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: transform 0.4s cubic-bezier(0.22, 1, 0.36, 1), box-shadow 0.4s ease;
+  animation: or-deal 0.7s cubic-bezier(0.22, 1, 0.36, 1) backwards;
+}
+.or-back::after {
+  content: '';
+  position: absolute;
+  inset: 6px;
+  border: 1px solid var(--line);
+  border-radius: 7px;
+  pointer-events: none;
+}
+@keyframes or-deal {
+  from { transform: rotate(0deg) translateY(60px) scale(0.88); opacity: 0; }
+}
+.or-back:hover, .or-back:focus-visible {
+  transform: rotate(var(--rot)) translateY(-26px) scale(1.06) !important;
+  box-shadow: 0 20px 44px rgba(31, 33, 36, 0.2);
+  z-index: 60;
+}
+.or-back:focus-visible { outline: 2px solid var(--ink); outline-offset: 3px; }
+
+.or-hint { font-size: 12.5px; color: var(--ink-2); }
+
+/* ---------- carte ---------- */
+.or-card {
+  width: min(480px, calc(100% - 36px));
+  background: var(--paper);
+  border: 1px solid var(--line);
+  border-radius: 28px;
+  padding: 44px 32px 30px;
+  box-shadow: 0 20px 60px rgba(31, 33, 36, 0.07);
+  animation: or-in 0.75s cubic-bezier(0.22, 1, 0.36, 1) backwards;
+}
+@keyframes or-in { from { opacity: 0; transform: translateY(18px) scale(0.98); } }
+
+.or-num-wrap { position: relative; display: flex; justify-content: center; align-items: center; }
+.or-halo {
+  position: absolute;
+  width: 190px; height: 190px;
+  border-radius: 50%;
+  background: var(--pastel);
+  opacity: 0.5;
+  filter: blur(2px);
+  animation: or-halo 1.1s cubic-bezier(0.22, 1, 0.36, 1) backwards;
+}
+@keyframes or-halo { from { transform: scale(0.5); opacity: 0; } }
+.or-num {
+  position: relative;
+  font-size: clamp(96px, 26vw, 128px);
+  font-weight: 200;
+  line-height: 1;
+  letter-spacing: -0.04em;
+  color: var(--deep);
+  animation: or-num-in 0.9s cubic-bezier(0.22, 1, 0.36, 1) 0.1s backwards;
+}
+@keyframes or-num-in { from { opacity: 0; transform: scale(0.86); } }
+
+.or-ill {
+  display: flex;
+  justify-content: center;
+  margin: 20px 0 18px;
+  color: var(--deep);
+  animation: or-fade 0.9s ease 0.35s backwards;
+}
+@keyframes or-fade { from { opacity: 0; } }
+
+.or-facette {
+  text-align: center;
+  font-size: 11px;
+  font-weight: 500;
+  letter-spacing: 0.28em;
+  text-transform: uppercase;
+  color: var(--deep);
+}
+.or-maitre {
+  display: block;
+  margin-top: 8px;
+  font-size: 9.5px;
+  letter-spacing: 0.22em;
+  color: var(--ink-3);
+}
+
+.or-msg {
+  font-family: var(--read);
+  font-weight: 300;
+  font-size: 20px;
+  line-height: 1.62;
+  text-align: center;
+  margin: 22px 6px 30px;
+  animation: or-fade 0.9s ease 0.5s backwards;
+}
+
+/* ---------- encart ---------- */
+.or-more { border-top: 1px solid var(--line); padding-top: 6px; }
+.or-toggle {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: transparent;
+  border: 0;
+  padding: 16px 4px;
+  cursor: pointer;
+  font-family: var(--ui);
+  font-size: 13.5px;
+  color: var(--ink-2);
+}
+.or-toggle:focus-visible { outline: 2px solid var(--deep); outline-offset: 2px; border-radius: 8px; }
+.or-chev { transition: transform 0.35s ease; color: var(--ink-3); }
+.or-chev.open { transform: rotate(180deg); }
+
+.or-panel { max-height: 0; overflow: hidden; transition: max-height 0.55s cubic-bezier(0.22, 1, 0.36, 1); }
+.or-panel.open { max-height: 1400px; }
+.or-panel-inner { padding: 6px 4px 12px; }
+
+.or-row { padding: 18px 0; border-bottom: 1px solid var(--line); }
+.or-row:last-child { border-bottom: 0; }
+.or-row-label {
+  font-size: 10px;
+  font-weight: 500;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--deep);
+  margin-bottom: 7px;
+}
+.or-row-text { font-size: 14.5px; line-height: 1.62; color: var(--ink-2); }
+.or-row-text.or-em {
+  font-family: var(--read);
+  font-style: italic;
+  font-weight: 300;
+  font-size: 17px;
+  color: var(--ink);
+}
+
+.or-again {
+  margin-top: 30px;
+  font-family: var(--ui);
+  font-size: 13px;
+  color: var(--ink-2);
+  background: transparent;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  padding: 13px 26px;
+  cursor: pointer;
+  transition: border-color 0.3s, color 0.3s;
+}
+.or-again:hover { border-color: var(--ink-3); color: var(--ink); }
+.or-again:focus-visible { outline: 2px solid var(--deep); outline-offset: 3px; }
+
+@media (max-width: 860px) {
+  .or-root { --cw: 84px; --ch: 126px; --radius: 620px; }
+}
+@media (max-width: 560px) {
+  .or-root { --cw: 62px; --ch: 94px; --radius: 400px; }
+  .or-card { padding: 36px 22px 24px; border-radius: 24px; }
+  .or-msg { font-size: 18.5px; }
+  .or-halo { width: 150px; height: 150px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .or-root *, .or-root { animation: none !important; transition: none !important; }
+}
+`;
+
+function Oracle() {
+  const [phase, setPhase] = useState("idle"); // idle | spread | card
+  const [deck, setDeck] = useState([]);
+  const [card, setCard] = useState(null);
+  const [open, setOpen] = useState(false);
+  const [w, setW] = useState(typeof window !== "undefined" ? window.innerWidth : 1024);
+
+  useEffect(() => {
+    const onResize = () => setW(window.innerWidth);
+    window.addEventListener("resize", onResize);
+    return () => window.removeEventListener("resize", onResize);
+  }, []);
+
+  // combien de cartes on étale, et sur quel angle
+  const fanCount = Math.min(FAN_MAX, w < 560 ? 13 : w < 860 ? 17 : FAN_MAX, CARDS.length);
+  const fanDeg = w < 560 ? 62 : w < 860 ? 58 : 54;
+
+  const spread = () => {
+    setDeck(shuffle(CARDS).slice(0, fanCount));
+    setCard(null);
+    setOpen(false);
+    setPhase("spread");
+  };
+
+  const choose = (c) => {
+    setCard(c);
+    setPhase("card");
+  };
+
+  const style = card
+    ? { "--pastel": card.pastel, "--deep": card.deep, "--tint": card.tint }
+    : undefined;
+
+  return (
+    <div className="or-root" style={style}>
+      <style>{CSS}</style>
+
+      {phase === "idle" && (
+        <div className="or-start">
+          <div className="or-logo-idle">
+            <Logo size={72} stroke={0.45} />
+          </div>
+          <button className="or-btn" onClick={spread}>
+            Tirer une carte
+          </button>
+        </div>
+      )}
+
+      {phase === "spread" && (
+        <div className="or-spread-wrap">
+          <div className="or-spread" role="group" aria-label={`${deck.length} cartes face cachée`}>
+            {deck.map((c, i) => {
+              const t = deck.length > 1 ? i / (deck.length - 1) - 0.5 : 0;
+              const rot = t * fanDeg;
+              return (
+                <button
+                  key={c.n}
+                  className="or-back"
+                  style={{
+                    "--rot": `${rot}deg`,
+                    transform: `rotate(${rot}deg)`,
+                    zIndex: i,
+                    animationDelay: `${i * 0.035}s`,
+                  }}
+                  onClick={() => choose(c)}
+                  aria-label={`Choisir la carte ${i + 1} sur ${deck.length}`}
+                >
+                  <Logo size={w < 560 ? 26 : 34} stroke={0.5} opacity={0.9} />
+                </button>
+              );
+            })}
+          </div>
+          <div className="or-hint">Choisis la carte qui t'appelle</div>
+        </div>
+      )}
+
+      {phase === "card" && card && (
+        <>
+          <article className="or-card" key={card.n}>
+            <div className="or-num-wrap">
+              <div className="or-halo" aria-hidden="true" />
+              <div className="or-num">{card.n}</div>
+            </div>
+
+            <div className="or-ill">
+              <svg
+                width="64"
+                height="64"
+                viewBox="0 0 64 64"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="1.4"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                aria-hidden="true"
+              >
+                {Ill[card.n]}
+              </svg>
+            </div>
+
+            <div className="or-facette">
+              {card.facette}
+              {card.maitre && <span className="or-maitre">Nombre maître</span>}
+            </div>
+
+            <p className="or-msg">{card.message}</p>
+
+            <div className="or-more">
+              <button className="or-toggle" onClick={() => setOpen((o) => !o)} aria-expanded={open}>
+                <span>Pour aller plus loin</span>
+                <svg
+                  className={`or-chev${open ? " open" : ""}`}
+                  width="14"
+                  height="14"
+                  viewBox="0 0 14 14"
+                  fill="none"
+                  aria-hidden="true"
+                >
+                  <path d="M3 5l4 4 4-4" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" />
+                </svg>
+              </button>
+
+              <div className={`or-panel${open ? " open" : ""}`}>
+                <div className="or-panel-inner">
+                  <div className="or-row">
+                    <div className="or-row-label">Une question</div>
+                    <div className="or-row-text or-em">{card.question}</div>
+                  </div>
+                  <div className="or-row">
+                    <div className="or-row-label">Une action</div>
+                    <div className="or-row-text">{card.action}</div>
+                  </div>
+                  <div className="or-row">
+                    <div className="or-row-label">L'équilibre</div>
+                    <div className="or-row-text">{card.equilibre}</div>
+                  </div>
+                  <div className="or-row">
+                    <div className="or-row-label">Mantra</div>
+                    <div className="or-row-text or-em">{card.mantra}</div>
+                  </div>
+                  <div className="or-row">
+                    <div className="or-row-label">Le nombre {card.n}</div>
+                    <div className="or-row-text">{card.numero}</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </article>
+
+          <button className="or-again" onClick={spread}>
+            Tirer une autre carte
+          </button>
+        </>
+      )}
+    </div>
+  );
+}
+
+
+ReactDOM.createRoot(document.getElementById("root")).render(<Oracle />);
+</script>
+</body>
+</html>
