@@ -1,3 +1,188 @@
+Trop bien 😍 Je pense que celle-ci peut être vraiment forte, parce qu'elle touche à quelque chose de très universel : reprendre son pouvoir, sans tomber dans le "tu dois te débrouiller seul". Je partirais plutôt sur l'idée d'être acteur de sa vie.
+
+1
+AUTONOMIE
+
+Tu possèdes déjà plus de ressources que tu ne le crois. Fais-toi confiance.
+
+🌿 Pour aller plus loin
+💭 Une question
+
+Dans quel domaine de ma vie est-ce que j'attends encore que quelqu'un décide, valide ou agisse à ma place ?
+
+👣 Une action
+
+Prends aujourd'hui une décision que tu repousses ou que tu avais l'habitude de laisser à quelqu'un d'autre.
+
+✨ Le rôle de cette énergie
+
+L'autonomie permet de devenir pleinement acteur de sa vie. Elle nous invite à faire confiance à nos ressources, à développer notre capacité à choisir et à avancer, même lorsque tout n'est pas parfaitement confortable. Plus nous cultivons cette autonomie, plus nous gagnons en liberté, en confiance et en sérénité.
+
+💛 Mantra
+
+Je suis mon meilleur allié.
+
+🔢 Le nombre 1
+
+Le 1 symbolise l'autonomie, l'initiative et la capacité à ouvrir son propre chemin. Il nous rappelle que nous avons tous le pouvoir de faire des choix et de devenir les principaux acteurs de notre vie.
+
+❤️ Il y a juste un point que je modifierais légèrement.
+
+Tu avais écrit :
+
+"Compter sur soi."
+
+Je trouve que ça peut être interprété comme "je n'ai besoin de personne", alors que ce n'est probablement pas le message que tu veux transmettre.
+
+Je parlerais plutôt de :
+
+faire confiance à ses ressources ;
+devenir acteur de sa vie ;
+oser choisir par soi-même.
+
+Parce qu'on peut être autonome et demander de l'aide. Les deux ne sont pas incompatibles.
+
+Je trouve que cette nuance est importante, surtout pour un oracle qui doit rester juste pour le plus grand nombre. ❤️
+
+Texte collé.txt
+Document
+ok c'est super.
+
+Peux tu me dire où je dois intégrer cet élément dans le fichier html en PJ ? A la suite de "Action" je veux l'ajouter. Avec la meme structure, couleur etc.
+
+Aussi, je veux changer les titres pour qu'ils collent à ce qu'on a choisi ensemble. Si tu peux me dire où les changer ? 
+
+
+
+Oui 😊 Dans ton fichier, toutes les cartes se trouvent dans le tableau :
+
+const CARDS = [
+
+Ta carte Autonomie doit être ajoutée juste après l’objet de la carte Action, et avant celui qui commence par :
+
+{
+  n: "2",
+  facette: "Écoute",
+
+Dans ton fichier actuel, la carte Action se termine par le champ numero, puis par },.
+
+Ajoute donc ce bloc juste après :
+
+  {
+    n: "1",
+    facette: "Autonomie",
+    pastel: "#f69497",
+    deep: "#c25f62",
+    tint: "#fdf0f0",
+    message:
+      "Tu possèdes déjà plus de ressources que tu ne le crois. Fais-toi confiance.",
+    question:
+      "Dans quel domaine de ma vie est-ce que j'attends encore que quelqu'un décide, valide ou agisse à ma place ?",
+    action:
+      "Prends aujourd'hui une décision que tu repousses ou que tu avais l'habitude de laisser à quelqu'un d'autre.",
+    equilibre:
+      "L'autonomie permet de devenir pleinement acteur de sa vie. Elle nous invite à faire confiance à nos ressources, à développer notre capacité à choisir et à avancer, même lorsque tout n'est pas parfaitement confortable. Plus nous cultivons cette autonomie, plus nous gagnons en liberté, en confiance et en sérénité.",
+    mantra:
+      "Je suis mon meilleur allié.",
+    numero:
+      "Le 1 symbolise l'autonomie, l'initiative et la capacité à ouvrir son propre chemin. Il nous rappelle que nous avons tous le pouvoir de faire des choix et de devenir les principaux acteurs de notre vie.",
+  },
+
+Tu conserves bien les mêmes couleurs que la carte Action grâce à :
+
+pastel: "#f69497",
+deep: "#c25f62",
+tint: "#fdf0f0",
+Modifier les titres de l’encart
+
+Plus bas dans le fichier, tu as cette partie :
+
+<div className="or-row-label">Une question</div>
+
+Les titres sont tous regroupés dans la section Pour aller plus loin. Remplace les cinq intitulés comme ceci :
+
+<div className="or-panel-inner">
+  <div className="or-row">
+    <div className="or-row-label">Question d'introspection</div>
+    <div className="or-row-text or-em">{card.question}</div>
+  </div>
+
+  <div className="or-row">
+    <div className="or-row-label">Une action</div>
+    <div className="or-row-text">{card.action}</div>
+  </div>
+
+  <div className="or-row">
+    <div className="or-row-label">Le rôle de cette énergie</div>
+    <div className="or-row-text">{card.equilibre}</div>
+  </div>
+
+  <div className="or-row">
+    <div className="or-row-label">Mantra</div>
+    <div className="or-row-text or-em">{card.mantra}</div>
+  </div>
+
+  <div className="or-row">
+    <div className="or-row-label">Le rôle du nombre {card.n}</div>
+    <div className="or-row-text">{card.numero}</div>
+  </div>
+</div>
+
+Le changement le plus important est :
+
+<div className="or-row-label">L'équilibre</div>
+
+à remplacer par :
+
+<div className="or-row-label">Le rôle de cette énergie</div>
+
+Tu peux conserver le nom technique equilibre dans les objets des cartes. Il ne s’affiche pas à l’écran : seul le titre écrit dans le JSX est visible.
+
+Une petite correction indispensable
+
+Comme tu vas désormais avoir plusieurs cartes portant le même nombre 1, cette ligne va poser problème :
+
+key={c.n}
+
+Les cartes Action et Autonomie auront toutes les deux la même clé "1". Remplace-la par :
+
+key={`${c.n}-${c.facette}`}
+
+Cela se trouve ici :
+
+<button
+  key={`${c.n}-${c.facette}`}
+  className="or-back"
+
+Remplace également :
+
+<article className="or-card" key={card.n}>
+
+par :
+
+<article className="or-card" key={`${card.n}-${card.facette}`}>
+
+Ainsi, tu pourras ajouter sans problème les cinq cartes du nombre 1 : Action, Autonomie, Nouveauté, Leader et Audace.
+
+ok alors fais moi toi tous ces changements stp je mettrai à jour le doc
+Réfléchi pendant 24s
+
+C’est fait 😊 J’ai intégré :
+
+la carte 1 — Autonomie juste après Action ;
+les mêmes couleurs et la même structure ;
+Question d’introspection à la place de « Une question » ;
+Le rôle de cette énergie à la place de « L’équilibre » ;
+Le rôle du nombre 1 à la place de « Le nombre 1 » ;
+la correction des clés React pour permettre plusieurs cartes portant le même nombre.
+
+oracle-numerolab-autonomie.html
+
+oracle-numerolab-autonomie.html
+HTML
+
+oracle-numerolab-autonomie.html
+oracle-numerolab-autonomie.html
 <!DOCTYPE html>
 <html lang="fr">
 <head>
@@ -169,6 +354,25 @@ const CARDS = [
     mantra: "Chaque petit pas me rapproche de là où je souhaite aller.",
     numero:
       "Le 1 symbolise le commencement, l'initiative et l'élan. Il nous rappelle que chaque nouvelle direction, chaque projet et chaque transformation commencent toujours par une première action.",
+  },
+  {
+    n: "1",
+    facette: "Autonomie",
+    pastel: "#f69497",
+    deep: "#c25f62",
+    tint: "#fdf0f0",
+    message:
+      "Tu possèdes déjà plus de ressources que tu ne le crois. Fais-toi confiance.",
+    question:
+      "Dans quel domaine de ma vie est-ce que j'attends encore que quelqu'un décide, valide ou agisse à ma place ?",
+    action:
+      "Prends aujourd'hui une décision que tu repousses ou que tu avais l'habitude de laisser à quelqu'un d'autre.",
+    equilibre:
+      "L'autonomie permet de devenir pleinement acteur de sa vie. Elle nous invite à faire confiance à nos ressources, à développer notre capacité à choisir et à avancer, même lorsque tout n'est pas parfaitement confortable. Plus nous cultivons cette autonomie, plus nous gagnons en liberté, en confiance et en sérénité.",
+    mantra:
+      "Je suis mon meilleur allié.",
+    numero:
+      "Le 1 symbolise l'autonomie, l'initiative et la capacité à ouvrir son propre chemin. Il nous rappelle que nous avons tous le pouvoir de faire des choix et de devenir les principaux acteurs de notre vie.",
   },
   {
     n: "2",
@@ -652,7 +856,7 @@ function Oracle() {
               const rot = t * fanDeg;
               return (
                 <button
-                  key={c.n}
+                  key={`${c.n}-${c.facette}`}
                   className="or-back"
                   style={{
                     "--rot": `${rot}deg`,
@@ -674,7 +878,7 @@ function Oracle() {
 
       {phase === "card" && card && (
         <>
-          <article className="or-card" key={card.n}>
+          <article className="or-card" key={`${card.n}-${card.facette}`}>
             <div className="or-num-wrap">
               <div className="or-halo" aria-hidden="true" />
               <div className="or-num">{card.n}</div>
@@ -721,7 +925,7 @@ function Oracle() {
               <div className={`or-panel${open ? " open" : ""}`}>
                 <div className="or-panel-inner">
                   <div className="or-row">
-                    <div className="or-row-label">Une question</div>
+                    <div className="or-row-label">Question d'introspection</div>
                     <div className="or-row-text or-em">{card.question}</div>
                   </div>
                   <div className="or-row">
@@ -729,7 +933,7 @@ function Oracle() {
                     <div className="or-row-text">{card.action}</div>
                   </div>
                   <div className="or-row">
-                    <div className="or-row-label">L'équilibre</div>
+                    <div className="or-row-label">Le rôle de cette énergie</div>
                     <div className="or-row-text">{card.equilibre}</div>
                   </div>
                   <div className="or-row">
@@ -737,7 +941,7 @@ function Oracle() {
                     <div className="or-row-text or-em">{card.mantra}</div>
                   </div>
                   <div className="or-row">
-                    <div className="or-row-label">Le nombre {card.n}</div>
+                    <div className="or-row-label">Le rôle du nombre {card.n}</div>
                     <div className="or-row-text">{card.numero}</div>
                   </div>
                 </div>
