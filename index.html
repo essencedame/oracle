@@ -838,7 +838,7 @@ function Oracle() {
     return () => window.removeEventListener("resize", onResize);
   }, []);
 
-  const fanCount = Math.min(FAN_MAX, w < 560 ? 13 : w < 860 ? 17 : FAN_MAX, CARDS.length);
+  const fanCount = CARDS.length; // toutes les cartes restent accessibles, quelle que soit la taille de l'écran
   const fanDeg = w < 560 ? 62 : w < 860 ? 58 : 54;
 
   const spread = () => {
